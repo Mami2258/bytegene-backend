@@ -1,20 +1,14 @@
-// Bu kodu kullanıcının butona bastığı anı tetikleyen fonksiyonun içine yaz
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
-// Kullanıcının girdiği veriyi alıyoruz (Örnek: input id'si "veriGirdisi" olsun)
-const kullaniciVerisi = document.getElementById("veriGirdisi").value;
+app = Flask(__name__)
+CORS(app) 
 
-fetch('https://SENIN-RENDER-LINKIN.onrender.com/analiz', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ veri: kullaniciVerisi }) 
-})
-.then(response => response.json())
-.then(data => {
-    // Python'dan gelen sonucu HTML'deki bir yere yazdır (Örnek id: "sonucEkrani")
-    document.getElementById("sonucEkrani").innerText = data.mesaj;
-})
-.catch(error => {
-    console.error("Hata oluştu:", error);
-});
+@app.route('/analiz', methods=['POST'])
+def analiz_yap():
+    gelen_veri = request.json
+    sonuc = {"durum": "basarili", "mesaj": "Python kodlari sorunsuz calisiyor!"}
+    return jsonify(sonuc)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=10000)
