@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analiz Sonuçları - Byte&Gene</title>
+    <link rel="stylesheet" href="https://thebytegene.com/static/style.css">
+    <style>
+        body {
+            display: block !important;
+            height: auto !important;
+            min-height: 100vh;
+            padding-bottom: 50px;
+            overflow-y: auto !important;
+        }
+
+        .results-wrapper {
+            margin-top: 100px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .results-container {
+            width: 90%;
+            max-width: 1000px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            margin-bottom: 50px;
+        }
+
+        .sequence-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .sequence-label {
+            color: #aaa;
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .sequence-content {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #00c9a7;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sequence-content.expanded {
+            display: block;
+            -webkit-line-clamp: unset;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #00c6ff;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 5px 0;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.4); }
+        th, td { padding: 12px; border: 1px solid #444; text-align: left; }
+        th { background: #00c9a7; color: white; }
+
+        th.sortable {
+            cursor: pointer;
+            transition: background 0.3s;
+            user-select: none;
+        }
+
+        th.sortable:hover {
+            background: #00a98a;
+        }
+
+        .sort-icon {
+            margin-left: 5px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .ncbi-link {
+            color: #00c6ff;
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: 500;
+        }
+
+        .ncbi-link:hover {
+            color: #00c9a7;
+            text-decoration: underline;
+        }
+
+        .back-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #444; color: white; text-decoration: none; border-radius: 5px; transition: 0.3s; }
+        .back-btn:hover { background: #666; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 201, 167, 0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <h2 class="logo">🧬 Byte&Gene</h2>
+    <div class="menu">
+        <a href="https://thebytegene.com/" class="menu-btn">Ana Sayfa</a>
+    </div>
+</div>
+
+<div class="results-wrapper">
+    <div class="results-container">
+        <h1>🔬 Analiz Raporu</h1>
+
+        <div class="sequence-box">
+            <span class="sequence-label">ARANAN GEN DİZİSİ:</span>
+            <div id="geneSeq" class="sequence-content">{{ dizi }}</div>
+            <button id="showMoreBtn" class="toggle-btn" onclick="toggleText()">Daha fazla göster...</button>
+        </div>
+
+        {% if veri.hata %}
+            <div style="background: rgba(255,0,0,0.2); padding: 15px; border-radius: 5px; color: #ffcccc;">
+                {{ veri.hata }}
+            </div>
+        {% elif veri.sonuclar %}
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Organizma</th>
+                            <th>Gen Tanımı</th>
+                            <th class="sortable" onclick="sortTable(2)">Eşleşme Oranı <span id="icon-2" class="sort-icon">(-)</span></th>
+                            <th class="sortable" onclick="sortTable(3)">E-Değeri <span id="icon-3" class="sort-icon">(-)</span></th>
+                            <th class="sortable" onclick="sortTable(4)">Skor <span id="icon-4" class="sort-icon">(-)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sonuc in veri.sonuclar %}
+                        <tr>
+                            <td><strong>{{ sonuc.organizma }}</strong></td>
+                            <td>
+                                <a href="{{ sonuc.ncbi_url }}" target="_blank" class="ncbi-link" title="Bu geni NCBI veritabanında görüntüle">
+                                    {{ sonuc.gen_tanimi }}
+                                </a>
+                            </td>
+                            <td>%{{ sonuc.kimlik_orani }}</td>
+                            <td>{{ sonuc.e_degeri }}</td>
+                            <td>{{ sonuc.eslesme_skoru }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        <a href="https://thebytegene.com/" class="back-btn">⬅ Yeni Analiz Yap</a>
+    </div>
+</div>
+
+<script>
+function toggleText() {
+    var content = document.getElementById("geneSeq");
+    var btn = document.getElementById("showMoreBtn");
+
+    if (content.classList.contains("expanded")) {
+        content.classList.remove("expanded");
+        btn.innerHTML = "Daha fazla göster...";
+    } else {
+        content.classList.add("expanded");
+        btn.innerHTML = "Daha az göster";
+    }
+}
+
+let currentSortCol = -1;
+let currentSortDir = 'desc';
+
+function sortTable(colIndex) {
+    const table = document.querySelector("table tbody");
+    if (!table) return;
+    const rows = Array.from(table.querySelectorAll("tr"));
+
+    if (currentSortCol === colIndex) {
+        currentSortDir = (currentSortDir === 'desc') ? 'asc' : 'desc';
+    } else {
+        currentSortCol = colIndex;
+        currentSortDir = 'desc';
+    }
+
+    updateHeaders();
+
+    rows.sort((a, b) => {
+        let valA = a.cells[colIndex].innerText.trim();
+        let valB = b.cells[colIndex].innerText.trim();
+
+        valA = parseFloat(valA.replace('%', ''));
+        valB = parseFloat(valB.replace('%', ''));
+
+        if (currentSortDir === 'desc') {
+            return valB - valA;
+        } else {
+            return valA - valB;
+        }
+    });
+
+    rows.forEach(row => table.appendChild(row));
+}
+
+function updateHeaders() {
+    const sortableCols = [2, 3, 4];
+    sortableCols.forEach(index => {
+        const icon = document.getElementById('icon-' + index);
+        if (icon) {
+            if (index === currentSortCol) {
+                icon.innerText = currentSortDir === 'desc' ? '(^)' : '(v)';
+            } else {
+                icon.innerText = '(-)';
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    sortTable(2);
+});
+</script>
+
+</body>
+</html>
